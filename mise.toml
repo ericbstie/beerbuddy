@@ -4,10 +4,14 @@ bun = "latest"
 
 [tasks.setup]
 description = "Set up the development environment (install dependencies, generate Prisma client) - does not start servers"
-dir = "{{config_dir}}"
 run = [
   "mise install",
   "cd backend && bun install",
   "cd backend && bunx prisma generate",
   "cd frontend && bun install"
 ]
+
+[tasks.seed]
+description = "Seed the database with test data"
+dir = "backend"
+run = "DATABASE_URL=postgresql://beerbuddy:beerbuddy@localhost:5432/beerbuddy bun run prisma db seed"
