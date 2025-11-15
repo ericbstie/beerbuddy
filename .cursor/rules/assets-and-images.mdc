@@ -1,0 +1,12 @@
+---
+description: Enable this rule when working on file uploads or image delivery.
+alwaysApply: false
+---
+## Assets and images – S3 / Firestore buckets
+
+- Store static images (post photos, avatars) in an **S3-compatible bucket or Firestore storage**, not on the app server filesystem.
+- Prefer pre-signed URLs or secure tokens for upload and access; keep buckets private by default.
+- Store only references (URLs, keys, metadata) in the database; the binary data lives in the bucket.
+- Keep upload, processing, and URL generation logic close to the features that use the images.
+
+

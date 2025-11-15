@@ -1,0 +1,12 @@
+---
+description: Enable this rule when working on backend HTTP / API code.
+alwaysApply: false
+---
+## Backend stack – TypeScript, Fastify, GraphQL
+
+- Use **TypeScript + Fastify** as the primary HTTP server; no other backend frameworks.
+- Expose the app via **Apollo Server integration with Fastify**; primary interface is GraphQL, not ad-hoc REST.
+- Let the **GraphQL schema** describe the public API; keep resolvers, loaders, and validation close to each feature slice.
+- Prefer vertical slices: group Fastify setup, Apollo integration, resolvers, and loaders for a feature near each other.
+
+

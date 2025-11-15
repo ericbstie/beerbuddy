@@ -1,0 +1,12 @@
+---
+description: Enable this rule when working on API boundaries or client–server types.
+alwaysApply: false
+---
+## Code generation and API types
+
+- Use GraphQL **code generation** to produce TypeScript types for operations and schema on the frontend (and backend where useful).
+- Consume generated types in React components, hooks, and TanStack Query calls; avoid hand-written duplicates of API shapes.
+- Regenerate types whenever the GraphQL schema or operations change; keep codegen config in version control.
+- Prefer strongly-typed APIs end-to-end to catch breaking changes early.
+
+

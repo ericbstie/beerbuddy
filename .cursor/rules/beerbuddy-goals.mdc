@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+## BeerBuddy product rules for Cursor
+
+- **Read README first**: On new sessions, skim `README.md` before coding. Use it as main reference for what the app is and is not.
+- **Follow sprint order**: When adding features, stick to the “Sprint roadmap” in `README.md`. Finish one sprint cleanly before pulling in later sprint work.
+- **Protect incrementality**: After each sprint, the app should be deployable and usable on its own, even if later sprints never ship.
+- **Keep README product-only**: Do not add stack, library, or infra details to `README.md`; use other docs for implementation details.
+- **Honor brevity**: Keep product docs tight, bullet-heavy, and focused on behavior users see, not internal design.
+
+

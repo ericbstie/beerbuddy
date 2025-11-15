@@ -1,0 +1,12 @@
+---
+description: Frontend input validation and forms
+alwaysApply: false
+---
+## Validation and forms – Zod + TanStack Form
+
+- Use **Zod** as the primary validation library for user input; avoid ad-hoc manual validation.
+- Use **TanStack Form** to wire Zod schemas into form state and validation flows.
+- Share validation logic between backend and frontend where practical; keep schemas close to their feature slices.
+- Treat validation as a first-class concern: fail fast with clear, user-facing error messages.
+
+

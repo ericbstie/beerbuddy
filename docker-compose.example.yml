@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-beerbuddy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-beerbuddy}
+      POSTGRES_DB: ${POSTGRES_DB:-beerbuddy}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-beerbuddy} -d ${POSTGRES_DB:-beerbuddy}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  react:
+    build:
+      context: ./frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+
+  fastify:
+    build:
+      context: ./backend
+    ports:
+      - "${BACKEND_PORT:-8000}:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+

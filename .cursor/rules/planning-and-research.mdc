@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+## Planning, confirmation, and research
+
+- **Always plan**: For each non-trivial prompt, break work into a short, multi-step actionable plan before editing code or configs.
+- **Confirm with user**: Present the plan and get explicit confirmation or corrections before implementing, unless the change is clearly tiny and mechanical.
+- **Note open questions**: While planning, write down unclarified assumptions, edge cases, and risks as concrete questions to the user instead of silently guessing.
+- **Ground in context**: Read relevant project files and product docs (especially `README.md` and other `.cursor/rules`) to ensure the plan fits existing code and goals.
+- **Research before committing**: For substantial work, use tools and external information (file/code search, documentation, web search, community anecdotes) to learn from existing patterns before finalizing the plan and implementation approach.
+
+

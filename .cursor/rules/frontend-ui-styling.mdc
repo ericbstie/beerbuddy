@@ -1,0 +1,12 @@
+---
+description: All frontend tasks
+alwaysApply: false
+---
+## Frontend UI – shadcn/ui and Tailwind
+
+- Use **shadcn/ui** components as the base design system where possible.
+- Use **Tailwind CSS** for styling; minimize custom global CSS.
+- Use **semantic Tailwind color tokens** (e.g. `bg-primary`, `text-muted`) instead of raw color names, and map these to the app’s look.
+- Co-locate component files, styles, and story/demo files within the same feature slice.
+
+

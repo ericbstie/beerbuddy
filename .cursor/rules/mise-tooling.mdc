@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+## Mise as tool manager
+
+- **Use mise**: Treat `mise` as the default tool/runtime manager for this repo. Prefer `mise` over per-language tool managers when possible.
+- **Honor config**: Use `mise.toml` in the project root as source of truth for runtimes, tools, and tasks; avoid ad-hoc installs that bypass it.
+- **Read docs first**: Before running any `mise` command (install, run, sync, etc.), use a web-search tool to open current mise docs (for example `https://mise.jdx.dev`) or relevant pages and skim behavior, flags, and examples.
+- **Be explicit**: When suggesting commands, show full `mise` invocations aligned with the docs, not half-remembered or outdated syntax.
+
+

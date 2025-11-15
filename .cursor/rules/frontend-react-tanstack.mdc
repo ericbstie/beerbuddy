@@ -1,0 +1,13 @@
+---
+description: When deciding how to solve a frontend task
+alwaysApply: false
+---
+## Frontend app – React, Vite, TanStack
+
+- Use **React + TypeScript** with **Vite** as the build tool.
+- Use **TanStack Router** for routing; avoid other routing libraries.
+- Use **TanStack Query** for server state and data fetching, wired to the GraphQL API.
+- Use **TanStack Virtual** for infinite scrolling feeds (Home, Explore, etc.).
+- Keep feature routes, queries, components, and state close together in vertical slices.
+
+

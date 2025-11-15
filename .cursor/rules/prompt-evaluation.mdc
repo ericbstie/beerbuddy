@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+## Prompt evaluation and feasibility
+
+- **Evaluate first**: Before changing files or running commands, check if the request makes sense and is feasible in this project.
+- **Check against goals**: Compare the request with `README.md` and other product docs; prefer solutions that move the app toward stated goals and avoid unnecessary technical debt.
+- **Keep evaluation concise**: Do the evaluation briefly. If the request is clearly fine and unambiguous, do not surface this step to the user; just execute with reasonable assumptions.
+- **Surface issues clearly**: When there is ambiguity, conflict with goals, or high risk, show a short summary (1–3 sentences) of concerns and ask focused questions before proceeding.
+- **Prefer aligned solutions**: When multiple implementations exist, choose the one that best fits existing architecture and long-term roadmap, not only the quickest hack.
+
+

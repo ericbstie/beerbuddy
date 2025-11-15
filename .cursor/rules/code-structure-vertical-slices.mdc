@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+
+## Code structure: vertical slices and colocation
+
+- **Vertical slices first**: Organize features by domain slice (e.g. Home feed, Explore feed, Liking, Commenting) instead of broad layers (e.g. “all requests”, “all data”). Keep code that changes together in the same folder or file when reasonable.
+- **Colocate aggressively**: Place components, hooks, utilities, and tests for a feature as close together as possible. Prefer local helpers over shared “utils” until real reuse pressure appears.
+- **Shallow code, early exits**: Aim for few indentation levels. Use early-return guard checks and small helper functions to avoid deep nesting.
+- **Functional style interfaces**: Favor small, pure functions and clear data-in/data-out interfaces. Avoid leaking internal state or implementation details across slices.
+- **Group by task inside files**: In a file, group code by logical behavior (e.g. Liking, Commenting, Beer-count tracking) rather than by type alone. Put related handlers, helpers, and data structures next to each other.
+- **Newline rules**: Use 2 blank lines between major logical groups; use 1 blank line between functions or types inside a group.
+- **Comments and clarity**: Prefer clear naming and structure over comments. Use comments only when intent is non-obvious or business-specific.
+
+

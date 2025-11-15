@@ -1,0 +1,12 @@
+---
+description: Enable this rule when working on data models, persistence, or queries.
+alwaysApply: false
+---
+## Data layer – PostgreSQL with Prisma
+
+- Use **PostgreSQL** as the only primary database.
+- Use **Prisma** as the ORM and migration tool; treat `schema.prisma` as source of truth for relational data.
+- Prefer Prisma client over raw SQL; use raw queries only when Prisma cannot express what is needed.
+- Keep Prisma models and related resolvers / repositories close to their feature slices.
+
+
