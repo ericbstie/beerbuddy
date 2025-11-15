@@ -1,14 +1,13 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { createRoute, redirect } from "@tanstack/react-router";
+import { createRoute, redirect, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { isAuthenticated } from "@/lib/auth";
-import { useMe, usePosts, useCreatePost, useDeletePost, useToggleLike, useCreateComment, useDeleteComment, usePostComments } from "@/lib/queries";
+import { useMe, usePosts, useDeletePost, useToggleLike, useCreateComment, useDeleteComment, usePostComments } from "@/lib/queries";
+import type { MeResponse } from "@/lib/graphql";
 import { toast } from "@/lib/toast";
 import { rootRoute } from "./__root";
 import { MoreVertical, Beer, Trash2, Clock, Heart, MessageCircle, Send, Loader2, X } from "lucide-react";
@@ -27,7 +26,7 @@ export const HomeRoute = createRoute({
 
 function HomePage() {
 	const queryClient = useQueryClient();
-	const { data: user, isLoading } = useMe();
+	const { data: user, isLoading } = useMe() as { data: MeResponse["me"] | undefined; isLoading: boolean };
 	const {
 		data: postsData,
 		isLoading: postsLoading,
@@ -35,16 +34,11 @@ function HomePage() {
 		hasNextPage,
 		isFetchingNextPage,
 	} = usePosts();
-	const createPost = useCreatePost();
 	const deletePost = useDeletePost();
 	const toggleLike = useToggleLike();
 	const createComment = useCreateComment();
 	const deleteComment = useDeleteComment();
 
-	const [showCreateForm, setShowCreateForm] = useState(false);
-	const [title, setTitle] = useState("");
-	const [description, setDescription] = useState("");
-	const [beersCount, setBeersCount] = useState("0");
 	const [openCommentsPostId, setOpenCommentsPostId] = useState<number | null>(null);
 	const [isDesktop, setIsDesktop] = useState(false);
 
@@ -116,27 +110,6 @@ function HomePage() {
 		checkLoadMore();
 	}, [checkLoadMore]);
 
-
-	const handleCreatePost = async (e: React.FormEvent) => {
-		e.preventDefault();
-		try {
-			await createPost.mutateAsync({
-				title,
-				description: description || undefined,
-				beersCount: parseInt(beersCount, 10),
-			});
-			toast.success("Post created successfully!");
-			setTitle("");
-			setDescription("");
-			setBeersCount("0");
-			setShowCreateForm(false);
-		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : "Failed to create post",
-			);
-		}
-	};
-
 	const handleDeletePost = async (id: number) => {
 		if (!confirm("Are you sure you want to delete this post?")) {
 			return;
@@ -183,7 +156,7 @@ function HomePage() {
 		onOpenComments,
 	}: {
 		post: (typeof allPosts)[0];
-		currentUser: (typeof user)["data"];
+		currentUser: MeResponse["me"] | undefined;
 		virtualItem: ReturnType<typeof virtualizer.getVirtualItems>[0];
 		onDelete: (id: number) => void;
 		isDeleting: boolean;
@@ -255,7 +228,11 @@ function HomePage() {
 				<Card className="bg-card border border-border/50 shadow-md hover:shadow-lg transition-shadow overflow-hidden p-0 gap-0 flex flex-col h-full max-h-full">
 					{/* Header */}
 					<div className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-muted/30 flex-shrink-0">
-							<div className="flex items-center gap-3">
+							<Link
+								to="/profile/$userId"
+								params={{ userId: post.authorId.toString() }}
+								className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+							>
 							<div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden ring-2 ring-primary/20">
 								{post.author.profilePicture ? (
 									<img
@@ -278,7 +255,7 @@ function HomePage() {
 									<span>{timeAgo}</span>
 								</div>
 							</div>
-						</div>
+						</Link>
 						{currentUser && post.authorId === currentUser.id && (
 							<div className="relative" ref={menuRef}>
 								<Button
@@ -384,68 +361,9 @@ function HomePage() {
 
 	return (
 		<div className="h-screen bg-background flex flex-col overflow-hidden">
-			<Navbar 
-				showCreatePost={showCreateForm}
-				onCreatePostClick={() => setShowCreateForm(!showCreateForm)}
-			/>
+			<Navbar />
 
 			<div className="flex-1 flex flex-col min-h-0 relative">
-				{showCreateForm && (
-					<div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 w-full max-w-lg px-4">
-						<Card className="mb-6">
-							<CardHeader>
-								<CardTitle>Create New Post</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<form onSubmit={handleCreatePost} className="space-y-4">
-									<div className="space-y-2">
-										<Label htmlFor="title">Title *</Label>
-										<Input
-											id="title"
-											type="text"
-											value={title}
-											onChange={(e) => setTitle(e.target.value)}
-											placeholder="Post title"
-											required
-										/>
-									</div>
-
-									<div className="space-y-2">
-										<Label htmlFor="description">Description</Label>
-										<Textarea
-											id="description"
-											value={description}
-											onChange={(e) => setDescription(e.target.value)}
-											placeholder="What happened tonight?"
-											rows={3}
-										/>
-									</div>
-
-									<div className="space-y-2">
-										<Label htmlFor="beersCount">Beers Count *</Label>
-										<Input
-											id="beersCount"
-											type="number"
-											min="0"
-											value={beersCount}
-											onChange={(e) => setBeersCount(e.target.value)}
-											required
-										/>
-									</div>
-
-									<Button
-										type="submit"
-										disabled={createPost.isPending}
-										isLoading={createPost.isPending}
-									>
-										Create Post
-									</Button>
-								</form>
-							</CardContent>
-						</Card>
-					</div>
-				)}
-
 				{postsLoading && allPosts.length === 0 ? (
 					<div className="flex items-center justify-center h-full">
 						<p className="text-muted-foreground">Loading posts...</p>
@@ -466,7 +384,7 @@ function HomePage() {
 									<PostCard
 										key={post.id}
 										post={post}
-										currentUser={user?.data}
+										currentUser={user}
 										virtualItem={virtualItem}
 										onDelete={handleDeletePost}
 										isDeleting={deletePost.isPending}
@@ -501,7 +419,7 @@ function HomePage() {
 			{openCommentsPostId && (
 				<CommentsDrawer
 					postId={openCommentsPostId}
-					currentUser={user?.data}
+					currentUser={user}
 					onClose={() => setOpenCommentsPostId(null)}
 					getTimeAgo={getTimeAgo}
 					createComment={createComment}
@@ -524,7 +442,7 @@ function CommentsDrawer({
 	isDesktop,
 }: {
 	postId: number;
-	currentUser: { id: number } | null | undefined;
+	currentUser: MeResponse["me"] | undefined;
 	onClose: () => void;
 	getTimeAgo: (date: Date) => string;
 	createComment: ReturnType<typeof useCreateComment>;
@@ -620,26 +538,36 @@ function CommentsDrawer({
 									key={comment.id}
 									className="flex items-start gap-3 group"
 								>
-									<div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-										{comment.user.profilePicture ? (
-											<img
-												src={comment.user.profilePicture}
-												alt={commentAuthorName}
-												className="w-full h-full object-cover"
-											/>
-										) : (
-											<span className="text-primary text-xs font-semibold">
-												{commentAuthorName.charAt(0).toUpperCase()}
-											</span>
-										)}
-									</div>
+									<Link
+										to="/profile/$userId"
+										params={{ userId: comment.userId.toString() }}
+										className="flex-shrink-0 hover:opacity-80 transition-opacity"
+									>
+										<div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+											{comment.user.profilePicture ? (
+												<img
+													src={comment.user.profilePicture}
+													alt={commentAuthorName}
+													className="w-full h-full object-cover"
+												/>
+											) : (
+												<span className="text-primary text-xs font-semibold">
+													{commentAuthorName.charAt(0).toUpperCase()}
+												</span>
+											)}
+										</div>
+									</Link>
 									<div className="flex-1 min-w-0">
 										<div className="flex items-start justify-between gap-3">
 											<div className="flex-1">
 												<p className="text-sm text-foreground leading-relaxed">
-													<span className="font-semibold">
+													<Link
+														to="/profile/$userId"
+														params={{ userId: comment.userId.toString() }}
+														className="font-semibold hover:underline"
+													>
 														{commentAuthorName}
-													</span>{" "}
+													</Link>{" "}
 													{comment.text}
 												</p>
 												<p className="text-xs text-muted-foreground mt-1">

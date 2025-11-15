@@ -6,6 +6,7 @@ import { IndexRoute } from "./routes/index";
 import { LoginRoute } from "./routes/login";
 import { ProfileByIdRoute, ProfileRoute } from "./routes/profile";
 import { SignupRoute } from "./routes/signup";
+import { CreatePostRoute } from "./routes/create-post";
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -23,6 +24,7 @@ const routeTree = rootRoute.addChildren([
 	HomeRoute,
 	ProfileRoute,
 	ProfileByIdRoute,
+	CreatePostRoute,
 ]);
 
 const router = createRouter({

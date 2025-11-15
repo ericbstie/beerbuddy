@@ -5,12 +5,7 @@ import { Beer, User, LogOut } from "lucide-react";
 import { removeToken } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 
-interface NavbarProps {
-	showCreatePost?: boolean;
-	onCreatePostClick?: () => void;
-}
-
-export function Navbar({ showCreatePost = false, onCreatePostClick }: NavbarProps) {
+export function Navbar() {
 	const [showProfileMenu, setShowProfileMenu] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);
 	const navigate = useNavigate();
@@ -55,19 +50,16 @@ export function Navbar({ showCreatePost = false, onCreatePostClick }: NavbarProp
 							</h1>
 						</Link>
 						<div className="flex gap-3 items-center">
-							{onCreatePostClick && (
-								<Button
-									onClick={onCreatePostClick}
-									variant={showCreatePost ? "outline" : "default"}
-									size="sm"
-									className={showCreatePost 
-										? "bg-primary-foreground/20 text-primary-foreground border-primary-foreground/40 hover:bg-primary-foreground/30 hover:text-primary-foreground backdrop-blur-sm" 
-										: "bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-md hover:shadow-lg transition-all"
-									}
-								>
-									{showCreatePost ? "Cancel" : "Create Post"}
-								</Button>
-							)}
+							<Button
+								asChild
+								variant="default"
+								size="sm"
+								className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-md hover:shadow-lg transition-all"
+							>
+								<Link to="/create-post">
+									Create Post
+								</Link>
+							</Button>
 							<div className="relative" ref={menuRef}>
 								<Button
 									variant="ghost"

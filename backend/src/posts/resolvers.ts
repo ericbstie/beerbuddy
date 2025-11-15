@@ -140,7 +140,7 @@ export const postResolvers = {
 				title: string;
 				description?: string;
 				beersCount: number;
-				imageUrl?: string;
+				imageUrl: string;
 			},
 			context: AuthContext,
 		) => {
@@ -153,13 +153,20 @@ export const postResolvers = {
 				throw new Error("Title is required");
 			}
 
-			// Validate beersCount
-			if (args.beersCount < 0) {
-				throw new Error("Beers count cannot be negative");
+			// Validate imageUrl
+			if (!args.imageUrl?.trim()) {
+				throw new Error("Image URL is required");
 			}
 
-			// Always use picsum for images (portrait: 500x700)
-			const imageUrl = args.imageUrl?.trim() || getPicsumImageUrl();
+			// Validate beersCount - must be between 1 and 12
+			if (!Number.isInteger(args.beersCount)) {
+				throw new Error("Beer count must be a whole number");
+			}
+			if (args.beersCount < 1 || args.beersCount > 12) {
+				throw new Error("Beer count must be between 1 and 12");
+			}
+
+			const imageUrl = args.imageUrl.trim();
 
 			const post = await prisma.post.create({
 				data: {

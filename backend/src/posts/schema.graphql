@@ -40,7 +40,7 @@ extend type Query {
 }
 
 extend type Mutation {
-	createPost(title: String!, description: String, beersCount: Int!, imageUrl: String): Post!
+	createPost(title: String!, description: String, beersCount: Int!, imageUrl: String!): Post!
 	deletePost(id: Int!): Boolean!
 	toggleLike(postId: Int!): Post!
 	createComment(postId: Int!, text: String!): Comment!

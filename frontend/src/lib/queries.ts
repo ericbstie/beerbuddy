@@ -298,7 +298,7 @@ export function useCreatePost() {
 	return useMutation<
 		CreatePostResponse["createPost"],
 		Error,
-		{ title: string; description?: string; beersCount: number; imageUrl?: string }
+		{ title: string; description?: string; beersCount: number; imageUrl: string }
 	>({
 		mutationFn: async ({ title, description, beersCount, imageUrl }) => {
 			if (!token) {

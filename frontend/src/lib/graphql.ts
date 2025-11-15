@@ -278,7 +278,7 @@ export interface PostCommentsResponse {
 }
 
 export const CREATE_POST_MUTATION = `
-	mutation CreatePost($title: String!, $description: String, $beersCount: Int!, $imageUrl: String) {
+	mutation CreatePost($title: String!, $description: String, $beersCount: Int!, $imageUrl: String!) {
 		createPost(title: $title, description: $description, beersCount: $beersCount, imageUrl: $imageUrl) {
 			id
 			title
