@@ -1,12 +1,14 @@
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-form-adapter";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLogin } from "@/lib/queries";
+import { toast } from "@/lib/toast";
 
 const loginSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
@@ -31,6 +33,7 @@ export function LoginForm() {
 					email: value.email,
 					password: value.password,
 				});
+				toast.success("Successfully signed in!");
 				navigate({ to: "/home" });
 			} catch (error) {
 				const message =
@@ -39,6 +42,7 @@ export function LoginForm() {
 					...prev,
 					errors: [message],
 				}));
+				toast.error(message);
 			}
 		},
 	});
@@ -138,8 +142,11 @@ export function LoginForm() {
 					<Button
 						type="submit"
 						className="w-full"
-						disabled={form.state.isSubmitting || loginMutation.isPending}
+						isLoading={form.state.isSubmitting || loginMutation.isPending}
 					>
+						{(form.state.isSubmitting || loginMutation.isPending) && (
+							<Loader2 className="h-4 w-4 animate-spin" />
+						)}
 						{form.state.isSubmitting || loginMutation.isPending
 							? "Signing in..."
 							: "Sign In"}

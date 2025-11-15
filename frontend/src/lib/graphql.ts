@@ -21,17 +21,32 @@ export async function graphqlRequest<T>(
 		headers.Authorization = `Bearer ${token}`;
 	}
 
-	const response = await fetch(API_URL, {
-		method: "POST",
-		headers,
-		body: JSON.stringify({ query, variables }),
-	});
-
-	if (!response.ok) {
-		throw new Error(`HTTP error! status: ${response.status}`);
+	let response: Response;
+	try {
+		response = await fetch(API_URL, {
+			method: "POST",
+			headers,
+			body: JSON.stringify({ query, variables }),
+		});
+	} catch (error) {
+		// Network error (e.g., CORS, connection refused)
+		const message =
+			error instanceof Error
+				? error.message
+				: "Network error. Please check your connection.";
+		throw new Error(message);
 	}
 
-	return await response.json();
+	if (!response.ok) {
+		const statusText = response.statusText || `HTTP ${response.status}`;
+		throw new Error(`Request failed: ${statusText}`);
+	}
+
+	const result = await response.json();
+
+	// GraphQL errors are returned in the response, not as HTTP errors
+	// These will be handled by the calling code
+	return result;
 }
 
 // Auth mutations

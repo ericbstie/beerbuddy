@@ -1,12 +1,14 @@
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-form-adapter";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSignup } from "@/lib/queries";
+import { toast } from "@/lib/toast";
 
 const signupBaseSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
@@ -41,6 +43,7 @@ export function SignupForm() {
 					email: value.email,
 					password: value.password,
 				});
+				toast.success("Account created successfully!");
 				navigate({ to: "/home" });
 			} catch (error) {
 				const message =
@@ -49,6 +52,7 @@ export function SignupForm() {
 					...prev,
 					errors: [message],
 				}));
+				toast.error(message);
 			}
 		},
 	});
@@ -203,8 +207,11 @@ export function SignupForm() {
 					<Button
 						type="submit"
 						className="w-full"
-						disabled={form.state.isSubmitting || signupMutation.isPending}
+						isLoading={form.state.isSubmitting || signupMutation.isPending}
 					>
+						{(form.state.isSubmitting || signupMutation.isPending) && (
+							<Loader2 className="h-4 w-4 animate-spin" />
+						)}
 						{form.state.isSubmitting || signupMutation.isPending
 							? "Creating..."
 							: "Sign Up"}
