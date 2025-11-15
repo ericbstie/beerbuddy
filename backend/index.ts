@@ -1,106 +1,26 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ApolloServer } from "@apollo/server";
 import fastifyApollo from "@as-integrations/fastify";
-import { PrismaClient } from "@prisma/client";
+import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { extractTokenFromHeader, verifyToken } from "./src/auth/jwt";
 import { type AuthContext, authResolvers } from "./src/auth/resolvers";
 
-const prisma = new PrismaClient();
 const fastify = Fastify({
 	logger: true,
 });
 
-const typeDefs = `#graphql
-  type User {
-    id: Int!
-    email: String!
-    name: String
-    createdAt: String!
-    updatedAt: String!
-  }
+// Load GraphQL schema from file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const schemaPath = join(__dirname, "src/auth/schema.graphql");
+const typeDefs = readFileSync(schemaPath, "utf-8");
 
-  type AuthPayload {
-    token: String!
-    user: User!
-  }
-
-  type Query {
-    users: [User!]!
-    user(id: Int!): User
-    me: User
-  }
-
-  type Mutation {
-    signup(email: String!, password: String!, name: String): AuthPayload!
-    login(email: String!, password: String!): AuthPayload!
-  }
-`;
-
+// Use resolvers from auth slice
 const resolvers = {
-	Query: {
-		users: async () => {
-			const users = await prisma.user.findMany({
-				select: {
-					id: true,
-					email: true,
-					name: true,
-					createdAt: true,
-					updatedAt: true,
-				},
-			});
-			return users.map((user) => ({
-				...user,
-				createdAt: user.createdAt.toISOString(),
-				updatedAt: user.updatedAt.toISOString(),
-			}));
-		},
-		user: async (_: unknown, { id }: { id: number }) => {
-			const user = await prisma.user.findUnique({
-				where: { id },
-				select: {
-					id: true,
-					email: true,
-					name: true,
-					createdAt: true,
-					updatedAt: true,
-				},
-			});
-			if (!user) {
-				return null;
-			}
-			return {
-				...user,
-				createdAt: user.createdAt.toISOString(),
-				updatedAt: user.updatedAt.toISOString(),
-			};
-		},
-		me: async (_: unknown, __: unknown, context: AuthContext) => {
-			if (!context.userId) {
-				throw new Error("Not authenticated");
-			}
-
-			const user = await prisma.user.findUnique({
-				where: { id: context.userId },
-				select: {
-					id: true,
-					email: true,
-					name: true,
-					createdAt: true,
-					updatedAt: true,
-				},
-			});
-
-			if (!user) {
-				throw new Error("User not found");
-			}
-
-			return {
-				...user,
-				createdAt: user.createdAt.toISOString(),
-				updatedAt: user.updatedAt.toISOString(),
-			};
-		},
-	},
+	Query: authResolvers.Query,
 	Mutation: authResolvers.Mutation,
 };
 
@@ -122,6 +42,12 @@ async function createContext(request: { headers: { authorization?: string } }) {
 
 const start = async () => {
 	try {
+		// Register CORS plugin
+		await fastify.register(cors, {
+			origin: true, // Allow all origins in development
+			credentials: true,
+		});
+
 		await apolloServer.start();
 		await fastify.register(fastifyApollo(apolloServer), {
 			context: createContext,

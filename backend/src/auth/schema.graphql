@@ -1,0 +1,25 @@
+# GraphQL schema for BeerBuddy
+
+type User {
+	id: Int!
+	email: String!
+	name: String
+	createdAt: String!
+	updatedAt: String!
+}
+
+type AuthPayload {
+	token: String!
+	user: User!
+}
+
+type Query {
+	users: [User!]!
+	user(id: Int!): User
+	me: User
+}
+
+type Mutation {
+	signup(email: String!, password: String!, name: String): AuthPayload!
+	login(email: String!, password: String!): AuthPayload!
+}

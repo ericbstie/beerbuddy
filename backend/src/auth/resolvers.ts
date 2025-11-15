@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../db";
 import {
 	generateToken,
 	hashPassword,
@@ -7,15 +7,75 @@ import {
 	verifyPassword,
 } from "./index";
 
-// PrismaClient should be passed in or imported from a shared instance
-// For now, creating here but ideally should be dependency injected
-const prisma = new PrismaClient();
-
 export interface AuthContext {
 	userId?: number;
 }
 
 export const authResolvers = {
+	Query: {
+		users: async () => {
+			const users = await prisma.user.findMany({
+				select: {
+					id: true,
+					email: true,
+					name: true,
+					createdAt: true,
+					updatedAt: true,
+				},
+			});
+			return users.map((user) => ({
+				...user,
+				createdAt: user.createdAt.toISOString(),
+				updatedAt: user.updatedAt.toISOString(),
+			}));
+		},
+		user: async (_: unknown, { id }: { id: number }) => {
+			const user = await prisma.user.findUnique({
+				where: { id },
+				select: {
+					id: true,
+					email: true,
+					name: true,
+					createdAt: true,
+					updatedAt: true,
+				},
+			});
+			if (!user) {
+				return null;
+			}
+			return {
+				...user,
+				createdAt: user.createdAt.toISOString(),
+				updatedAt: user.updatedAt.toISOString(),
+			};
+		},
+		me: async (_: unknown, __: unknown, context: AuthContext) => {
+			if (!context.userId) {
+				throw new Error("Not authenticated");
+			}
+
+			const user = await prisma.user.findUnique({
+				where: { id: context.userId },
+				select: {
+					id: true,
+					email: true,
+					name: true,
+					createdAt: true,
+					updatedAt: true,
+				},
+			});
+
+			if (!user) {
+				throw new Error("User not found");
+			}
+
+			return {
+				...user,
+				createdAt: user.createdAt.toISOString(),
+				updatedAt: user.updatedAt.toISOString(),
+			};
+		},
+	},
 	Mutation: {
 		signup: async (
 			_: unknown,

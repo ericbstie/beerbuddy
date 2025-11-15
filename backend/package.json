@@ -6,6 +6,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.5",
 		"@types/bun": "latest",
+		"@types/jsonwebtoken": "^9.0.7",
 		"@types/node": "^24.10.1"
 	},
 	"peerDependencies": {
@@ -14,15 +15,18 @@
 	"dependencies": {
 		"@apollo/server": "^5.1.0",
 		"@as-integrations/fastify": "^3.1.0",
+		"@fastify/cors": "^11.1.0",
 		"@prisma/client": "^6.19.0",
+		"argon2": "^0.41.1",
 		"fastify": "^5.6.2",
 		"graphql": "^16.12.0",
+		"jsonwebtoken": "^9.0.2",
 		"prisma": "^6.19.0"
 	},
 	"scripts": {
 		"dev": "bun run index.ts",
 		"test": "bun test",
-		"test:integration": "API_URL=${API_URL:-http://localhost:8000/graphql} bun test tests/integration",
+		"test:integration": "API_URL=${API_URL:-http://localhost:3000/graphql} bun test tests/integration",
 		"lint": "bunx @biomejs/biome check .",
 		"lint:fix": "bunx @biomejs/biome check --write .",
 		"format": "bunx @biomejs/biome format --write ."

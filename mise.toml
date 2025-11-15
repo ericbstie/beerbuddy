@@ -1,5 +1,6 @@
 [tools]
 bun = "latest"
+"npm:playwright" = "latest"
 
 [tasks.setup]
 description = "Set up the development environment (install dependencies, generate Prisma client) - does not start servers"

@@ -15,3 +15,12 @@ declare module "*.module.css" {
 	const classes: { readonly [key: string]: string };
 	export = classes;
 }
+
+// Bun HMR types
+declare global {
+	interface ImportMeta {
+		hot?: {
+			data: Record<string, unknown>;
+		};
+	}
+}

@@ -6,7 +6,14 @@ import { IndexRoute } from "./routes/index";
 import { LoginRoute } from "./routes/login";
 import { SignupRoute } from "./routes/signup";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			staleTime: 1000 * 60 * 5, // 5 minutes
+			retry: 1,
+		},
+	},
+});
 
 const routeTree = rootRoute.addChildren([
 	IndexRoute,
@@ -15,7 +22,12 @@ const routeTree = rootRoute.addChildren([
 	HomeRoute,
 ]);
 
-const router = createRouter({ routeTree });
+const router = createRouter({
+	routeTree,
+	context: () => ({
+		queryClient,
+	}),
+});
 
 declare module "@tanstack/react-router" {
 	interface Register {

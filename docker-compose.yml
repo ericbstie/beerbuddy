@@ -20,6 +20,8 @@ services:
       context: ./frontend
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      BUN_PUBLIC_API_URL: ${BUN_PUBLIC_API_URL:-http://localhost:${BACKEND_PORT:-8000}/graphql}
 
   fastify:
     build:

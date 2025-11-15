@@ -6,16 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLogin } from "@/lib/queries";
 
 const loginSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
-	password: z.string().min(6, "Password must be at least 6 characters"),
+	password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
 	const navigate = useNavigate();
+	const loginMutation = useLogin();
 
 	const form = useForm<LoginFormValues>({
 		defaultValues: {
@@ -24,35 +26,55 @@ export function LoginForm() {
 		},
 		validatorAdapter: zodValidator(),
 		onSubmit: async ({ value }) => {
-			// Form validation passed - in a real app, this would call an API
-			console.log("Login form submitted:", value);
-			// Navigate to home page after "login"
-			navigate({ to: "/home" });
+			try {
+				await loginMutation.mutateAsync({
+					email: value.email,
+					password: value.password,
+				});
+				navigate({ to: "/home" });
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : "An error occurred";
+				form.setFieldMeta("email", (prev) => ({
+					...prev,
+					errors: [message],
+				}));
+			}
 		},
 	});
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Sign In</CardTitle>
+		<Card className="shadow-lg w-full">
+			<CardHeader
+				className="pt-0"
+				style={{ paddingBottom: "clamp(1rem, 3vw, 1.5rem)" }}
+			>
+				<CardTitle
+					style={{
+						fontSize: "clamp(1.25rem, 3vw, 1.5rem)",
+					}}
+				>
+					Sign In
+				</CardTitle>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="pt-0">
 				<form
 					onSubmit={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
 						form.handleSubmit();
 					}}
-					className="space-y-4"
+					style={{ gap: "clamp(1rem, 3vw, 1.25rem)" }}
+					className="flex flex-col"
 				>
 					<form.Field
 						name="email"
 						validators={{
-							onChange: zodValidator(loginSchema.shape.email),
+							onChange: loginSchema.shape.email,
 						}}
 					>
 						{(field) => (
-							<div className="space-y-2">
+							<div style={{ gap: "0.5rem" }} className="flex flex-col">
 								<Label htmlFor={field.name}>Email</Label>
 								<Input
 									id={field.name}
@@ -62,11 +84,19 @@ export function LoginForm() {
 									onChange={(e) => field.handleChange(e.target.value)}
 									aria-invalid={field.state.meta.errors.length > 0}
 								/>
-								{field.state.meta.errors.length > 0 && (
-									<p className="text-sm text-destructive">
-										{field.state.meta.errors[0]}
-									</p>
-								)}
+								{(() => {
+									// Filter out any non-string errors (like validator objects)
+									const stringErrors = field.state.meta.errors
+										.filter((e) => typeof e === "string" && e !== "")
+										.map((e) => String(e)) as string[];
+									if (stringErrors.length === 0) return null;
+									const errorMessage = stringErrors[0];
+									if (!errorMessage || typeof errorMessage !== "string")
+										return null;
+									return (
+										<p className="text-sm text-destructive">{errorMessage}</p>
+									);
+								})()}
 							</div>
 						)}
 					</form.Field>
@@ -74,11 +104,11 @@ export function LoginForm() {
 					<form.Field
 						name="password"
 						validators={{
-							onChange: zodValidator(loginSchema.shape.password),
+							onChange: loginSchema.shape.password,
 						}}
 					>
 						{(field) => (
-							<div className="space-y-2">
+							<div style={{ gap: "0.5rem" }} className="flex flex-col">
 								<Label htmlFor={field.name}>Password</Label>
 								<Input
 									id={field.name}
@@ -88,11 +118,19 @@ export function LoginForm() {
 									onChange={(e) => field.handleChange(e.target.value)}
 									aria-invalid={field.state.meta.errors.length > 0}
 								/>
-								{field.state.meta.errors.length > 0 && (
-									<p className="text-sm text-destructive">
-										{field.state.meta.errors[0]}
-									</p>
-								)}
+								{(() => {
+									// Filter out any non-string errors (like validator objects)
+									const stringErrors = field.state.meta.errors
+										.filter((e) => typeof e === "string" && e !== "")
+										.map((e) => String(e)) as string[];
+									if (stringErrors.length === 0) return null;
+									const errorMessage = stringErrors[0];
+									if (!errorMessage || typeof errorMessage !== "string")
+										return null;
+									return (
+										<p className="text-sm text-destructive">{errorMessage}</p>
+									);
+								})()}
 							</div>
 						)}
 					</form.Field>
@@ -100,9 +138,11 @@ export function LoginForm() {
 					<Button
 						type="submit"
 						className="w-full"
-						disabled={form.state.isSubmitting}
+						disabled={form.state.isSubmitting || loginMutation.isPending}
 					>
-						{form.state.isSubmitting ? "Signing in..." : "Sign In"}
+						{form.state.isSubmitting || loginMutation.isPending
+							? "Signing in..."
+							: "Sign In"}
 					</Button>
 				</form>
 			</CardContent>
