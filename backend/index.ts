@@ -8,6 +8,7 @@ import Fastify from "fastify";
 import { extractTokenFromHeader, verifyToken } from "./src/auth/jwt";
 import { type AuthContext, authResolvers } from "./src/auth/resolvers";
 import { postResolvers } from "./src/posts/resolvers";
+import { followResolvers } from "./src/follows/resolvers";
 
 const fastify = Fastify({
 	logger: true,
@@ -18,19 +19,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const authSchemaPath = join(__dirname, "src/auth/schema.graphql");
 const postsSchemaPath = join(__dirname, "src/posts/schema.graphql");
+const followsSchemaPath = join(__dirname, "src/follows/schema.graphql");
 const authTypeDefs = readFileSync(authSchemaPath, "utf-8");
 const postsTypeDefs = readFileSync(postsSchemaPath, "utf-8");
-const typeDefs = [authTypeDefs, postsTypeDefs];
+const followsTypeDefs = readFileSync(followsSchemaPath, "utf-8");
+const typeDefs = [authTypeDefs, postsTypeDefs, followsTypeDefs];
 
 // Combine resolvers from all slices
 const resolvers = {
 	Query: {
 		...authResolvers.Query,
 		...postResolvers.Query,
+		...followResolvers.Query,
 	},
 	Mutation: {
 		...authResolvers.Mutation,
 		...postResolvers.Mutation,
+		...followResolvers.Mutation,
 	},
 };
 

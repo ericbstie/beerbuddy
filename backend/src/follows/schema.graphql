@@ -1,0 +1,36 @@
+type Follow {
+	id: Int!
+	followerId: Int!
+	followingId: Int!
+	follower: User!
+	following: User!
+	createdAt: String!
+}
+
+type FollowsConnection {
+	follows: [Follow!]!
+	totalCount: Int!
+}
+
+type FollowersConnection {
+	followers: [User!]!
+	totalCount: Int!
+}
+
+type FollowingConnection {
+	following: [User!]!
+	totalCount: Int!
+}
+
+extend type Query {
+	follows(userId: Int!): FollowsConnection!
+	followers(userId: Int!): FollowersConnection!
+	following(userId: Int!): FollowingConnection!
+	isFollowing(followerId: Int!, followingId: Int!): Boolean!
+}
+
+extend type Mutation {
+	followUser(userId: Int!): Boolean!
+	unfollowUser(userId: Int!): Boolean!
+}
+

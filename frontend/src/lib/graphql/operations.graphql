@@ -35,6 +35,10 @@ query Me {
 		nickname
 		bio
 		profilePicture
+		followerCount
+		followingCount
+		totalBeersCount
+		totalPostsCount
 		createdAt
 		updatedAt
 	}
@@ -48,6 +52,10 @@ query Profile($id: Int!) {
 		nickname
 		bio
 		profilePicture
+		followerCount
+		followingCount
+		totalBeersCount
+		totalPostsCount
 		createdAt
 		updatedAt
 	}
@@ -61,13 +69,17 @@ mutation UpdateProfile($nickname: String, $bio: String, $profilePicture: String)
 		nickname
 		bio
 		profilePicture
+		followerCount
+		followingCount
+		totalBeersCount
+		totalPostsCount
 		createdAt
 		updatedAt
 	}
 }
 
-query Posts($limit: Int, $cursor: Int) {
-	posts(limit: $limit, cursor: $cursor) {
+query Posts($limit: Int, $cursor: Int, $feed: Boolean) {
+	posts(limit: $limit, cursor: $cursor, feed: $feed) {
 		posts {
 			id
 			title
@@ -179,4 +191,48 @@ mutation CreateComment($postId: Int!, $text: String!) {
 
 mutation DeleteComment($id: Int!) {
 	deleteComment(id: $id)
+}
+
+query Followers($userId: Int!) {
+	followers(userId: $userId) {
+		followers {
+			id
+			email
+			name
+			nickname
+			bio
+			profilePicture
+			createdAt
+			updatedAt
+		}
+		totalCount
+	}
+}
+
+query Following($userId: Int!) {
+	following(userId: $userId) {
+		following {
+			id
+			email
+			name
+			nickname
+			bio
+			profilePicture
+			createdAt
+			updatedAt
+		}
+		totalCount
+	}
+}
+
+query IsFollowing($followerId: Int!, $followingId: Int!) {
+	isFollowing(followerId: $followerId, followingId: $followingId)
+}
+
+mutation FollowUser($userId: Int!) {
+	followUser(userId: $userId)
+}
+
+mutation UnfollowUser($userId: Int!) {
+	unfollowUser(userId: $userId)
 }

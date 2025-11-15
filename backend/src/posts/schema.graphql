@@ -35,7 +35,7 @@ type PostsConnection {
 }
 
 extend type Query {
-	posts(limit: Int, cursor: Int): PostsConnection!
+	posts(limit: Int, cursor: Int, feed: Boolean): PostsConnection!
 	postComments(postId: Int!): PostComments!
 }
 

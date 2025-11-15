@@ -61,6 +61,10 @@ export const SIGNUP_MUTATION = `
 				nickname
 				bio
 				profilePicture
+				followerCount
+				followingCount
+				totalBeersCount
+				totalPostsCount
 			}
 		}
 	}
@@ -77,6 +81,10 @@ export const LOGIN_MUTATION = `
 				nickname
 				bio
 				profilePicture
+				followerCount
+				followingCount
+				totalBeersCount
+				totalPostsCount
 			}
 		}
 	}
@@ -91,6 +99,10 @@ export const ME_QUERY = `
 			nickname
 			bio
 			profilePicture
+			followerCount
+			followingCount
+			totalBeersCount
+			totalPostsCount
 			createdAt
 			updatedAt
 		}
@@ -106,6 +118,10 @@ export const PROFILE_QUERY = `
 			nickname
 			bio
 			profilePicture
+			followerCount
+			followingCount
+			totalBeersCount
+			totalPostsCount
 			createdAt
 			updatedAt
 		}
@@ -121,6 +137,10 @@ export const UPDATE_PROFILE_MUTATION = `
 			nickname
 			bio
 			profilePicture
+			followerCount
+			followingCount
+			totalBeersCount
+			totalPostsCount
 			createdAt
 			updatedAt
 		}
@@ -134,6 +154,10 @@ interface User {
 	nickname: string | null;
 	bio: string | null;
 	profilePicture: string | null;
+	followerCount?: number;
+	followingCount?: number;
+	totalBeersCount?: number;
+	totalPostsCount?: number;
 	createdAt?: string;
 	updatedAt?: string;
 }
@@ -153,28 +177,40 @@ export interface LoginResponse {
 
 export interface MeResponse {
 	me: User & {
+		followerCount: number;
+		followingCount: number;
+		totalBeersCount: number;
+		totalPostsCount: number;
 		createdAt: string;
 		updatedAt: string;
 	};
 }
 
 export interface ProfileResponse {
-	user: User & {
+	user: (User & {
+		followerCount: number;
+		followingCount: number;
+		totalBeersCount: number;
+		totalPostsCount: number;
 		createdAt: string;
 		updatedAt: string;
-	} | null;
+	}) | null;
 }
 
 export interface UpdateProfileResponse {
 	updateProfile: User & {
+		followerCount: number;
+		followingCount: number;
+		totalBeersCount: number;
+		totalPostsCount: number;
 		createdAt: string;
 		updatedAt: string;
 	};
 }
 
 export const POSTS_QUERY = `
-	query Posts($limit: Int, $cursor: Int) {
-		posts(limit: $limit, cursor: $cursor) {
+	query Posts($limit: Int, $cursor: Int, $feed: Boolean) {
+		posts(limit: $limit, cursor: $cursor, feed: $feed) {
 			posts {
 				id
 				title
@@ -369,4 +405,90 @@ export interface CreateCommentResponse {
 
 export interface DeleteCommentResponse {
 	deleteComment: boolean;
+}
+
+export const FOLLOWERS_QUERY = `
+	query Followers($userId: Int!) {
+		followers(userId: $userId) {
+			followers {
+				id
+				email
+				name
+				nickname
+				bio
+				profilePicture
+				createdAt
+				updatedAt
+			}
+			totalCount
+		}
+	}
+`;
+
+export const FOLLOWING_QUERY = `
+	query Following($userId: Int!) {
+		following(userId: $userId) {
+			following {
+				id
+				email
+				name
+				nickname
+				bio
+				profilePicture
+				createdAt
+				updatedAt
+			}
+			totalCount
+		}
+	}
+`;
+
+export const IS_FOLLOWING_QUERY = `
+	query IsFollowing($followerId: Int!, $followingId: Int!) {
+		isFollowing(followerId: $followerId, followingId: $followingId)
+	}
+`;
+
+export const FOLLOW_USER_MUTATION = `
+	mutation FollowUser($userId: Int!) {
+		followUser(userId: $userId)
+	}
+`;
+
+export const UNFOLLOW_USER_MUTATION = `
+	mutation UnfollowUser($userId: Int!) {
+		unfollowUser(userId: $userId)
+	}
+`;
+
+export interface FollowersResponse {
+	followers: {
+		followers: (User & {
+			createdAt: string;
+			updatedAt: string;
+		})[];
+		totalCount: number;
+	};
+}
+
+export interface FollowingResponse {
+	following: {
+		following: (User & {
+			createdAt: string;
+			updatedAt: string;
+		})[];
+		totalCount: number;
+	};
+}
+
+export interface IsFollowingResponse {
+	isFollowing: boolean;
+}
+
+export interface FollowUserResponse {
+	followUser: boolean;
+}
+
+export interface UnfollowUserResponse {
+	unfollowUser: boolean;
 }

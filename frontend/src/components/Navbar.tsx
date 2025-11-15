@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Beer, User, LogOut } from "lucide-react";
 import { removeToken } from "@/lib/auth";
@@ -10,6 +10,13 @@ export function Navbar() {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+	const location = useLocation();
+	
+	// Check URL search params to determine active tab
+	const urlParams = new URLSearchParams(location.search);
+	const feedParam = urlParams.get("feed") === "true";
+	const isFeed = location.pathname === "/home" && feedParam;
+	const isExplore = location.pathname === "/home" && !feedParam;
 
 	const handleLogout = () => {
 		removeToken();
@@ -49,6 +56,31 @@ export function Navbar() {
 								BeerBuddy
 							</h1>
 						</Link>
+						{location.pathname === "/home" && (
+							<div className="flex items-center gap-1 bg-primary-foreground/10 rounded-lg p-1 border border-primary-foreground/20">
+								<Link
+									to="/home"
+									search={{ feed: true }}
+									className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+										isFeed
+											? "bg-primary-foreground text-primary shadow-sm"
+											: "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
+									}`}
+								>
+									Feed
+								</Link>
+								<Link
+									to="/home"
+									className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+										isExplore
+											? "bg-primary-foreground text-primary shadow-sm"
+											: "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
+									}`}
+								>
+									Explore
+								</Link>
+							</div>
+						)}
 						<div className="flex gap-3 items-center">
 							<Button
 								asChild

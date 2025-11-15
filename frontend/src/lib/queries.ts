@@ -33,14 +33,28 @@ import {
 	type SignupResponse,
 	UPDATE_PROFILE_MUTATION,
 	type UpdateProfileResponse,
+	FOLLOWERS_QUERY,
+	type FollowersResponse,
+	FOLLOWING_QUERY,
+	type FollowingResponse,
+	IS_FOLLOWING_QUERY,
+	type IsFollowingResponse,
+	FOLLOW_USER_MUTATION,
+	type FollowUserResponse,
+	UNFOLLOW_USER_MUTATION,
+	type UnfollowUserResponse,
 } from "./graphql";
 
 // Query keys
 export const queryKeys = {
 	me: ["me"] as const,
 	profile: (userId: number) => ["profile", userId] as const,
-	posts: ["posts"] as const,
+	posts: (feed?: boolean) => ["posts", feed] as const,
 	postComments: (postId: number) => ["postComments", postId] as const,
+	followers: (userId: number) => ["followers", userId] as const,
+	following: (userId: number) => ["following", userId] as const,
+	isFollowing: (followerId: number, followingId: number) =>
+		["isFollowing", followerId, followingId] as const,
 };
 
 // Shared query function for me query
@@ -224,18 +238,19 @@ export function useUpdateProfile() {
 }
 
 // Posts infinite query hook
-export function usePosts() {
+export function usePosts(feed?: boolean) {
 	const token = getToken();
 	const limit = 10;
 
 	return useInfiniteQuery<PostsResponse["posts"]>({
-		queryKey: queryKeys.posts,
+		queryKey: queryKeys.posts(feed),
 		queryFn: async ({ pageParam }) => {
 			const response = await graphqlRequest<PostsResponse>(
 				POSTS_QUERY,
 				{
 					limit,
 					cursor: pageParam,
+					feed: feed || undefined,
 				},
 				token || undefined,
 			);
@@ -324,8 +339,8 @@ export function useCreatePost() {
 			return response.data.createPost;
 		},
 		onSuccess: () => {
-			// Invalidate and refetch posts after successful creation
-			queryClient.invalidateQueries({ queryKey: queryKeys.posts });
+			// Invalidate and refetch posts after successful creation (both feed and explore)
+			queryClient.invalidateQueries({ queryKey: ["posts"] });
 		},
 	});
 }
@@ -356,8 +371,8 @@ export function useDeletePost() {
 			return response.data?.deletePost ?? false;
 		},
 		onSuccess: () => {
-			// Invalidate and refetch posts after successful deletion
-			queryClient.invalidateQueries({ queryKey: queryKeys.posts });
+			// Invalidate and refetch posts after successful deletion (both feed and explore)
+			queryClient.invalidateQueries({ queryKey: ["posts"] });
 		},
 	});
 }
@@ -396,8 +411,8 @@ export function useToggleLike() {
 			return response.data.toggleLike;
 		},
 		onSuccess: () => {
-			// Invalidate and refetch posts after successful like toggle
-			queryClient.invalidateQueries({ queryKey: queryKeys.posts });
+			// Invalidate and refetch posts after successful like toggle (both feed and explore)
+			queryClient.invalidateQueries({ queryKey: ["posts"] });
 		},
 	});
 }
@@ -466,8 +481,182 @@ export function useDeleteComment() {
 			return response.data?.deleteComment ?? false;
 		},
 		onSuccess: () => {
-			// Invalidate and refetch posts after successful comment deletion
-			queryClient.invalidateQueries({ queryKey: queryKeys.posts });
+			// Invalidate and refetch posts after successful comment deletion (both feed and explore)
+			queryClient.invalidateQueries({ queryKey: ["posts"] });
+		},
+	});
+}
+
+// Followers query hook
+export function useFollowers(userId: number) {
+	const token = getToken();
+
+	return useQuery<FollowersResponse["followers"]["followers"]>({
+		queryKey: queryKeys.followers(userId),
+		queryFn: async () => {
+			if (!token) {
+				throw new Error("Not authenticated");
+			}
+
+			const response = await graphqlRequest<FollowersResponse>(
+				FOLLOWERS_QUERY,
+				{ userId },
+				token,
+			);
+
+			if (response.errors) {
+				throw new Error(
+					response.errors[0]?.message || "Failed to fetch followers",
+				);
+			}
+
+			if (!response.data?.followers) {
+				throw new Error("No followers data received");
+			}
+
+			return response.data.followers.followers;
+		},
+		enabled: !!userId && !!token,
+		retry: false,
+	});
+}
+
+// Following query hook
+export function useFollowing(userId: number) {
+	const token = getToken();
+
+	return useQuery<FollowingResponse["following"]["following"]>({
+		queryKey: queryKeys.following(userId),
+		queryFn: async () => {
+			if (!token) {
+				throw new Error("Not authenticated");
+			}
+
+			const response = await graphqlRequest<FollowingResponse>(
+				FOLLOWING_QUERY,
+				{ userId },
+				token,
+			);
+
+			if (response.errors) {
+				throw new Error(
+					response.errors[0]?.message || "Failed to fetch following",
+				);
+			}
+
+			if (!response.data?.following) {
+				throw new Error("No following data received");
+			}
+
+			return response.data.following.following;
+		},
+		enabled: !!userId && !!token,
+		retry: false,
+	});
+}
+
+// Is following query hook
+export function useIsFollowing(followerId: number, followingId: number) {
+	const token = getToken();
+
+	return useQuery<boolean>({
+		queryKey: queryKeys.isFollowing(followerId, followingId),
+		queryFn: async () => {
+			if (!token) {
+				throw new Error("Not authenticated");
+			}
+
+			const response = await graphqlRequest<IsFollowingResponse>(
+				IS_FOLLOWING_QUERY,
+				{ followerId, followingId },
+				token,
+			);
+
+			if (response.errors) {
+				throw new Error(
+					response.errors[0]?.message || "Failed to check follow status",
+				);
+			}
+
+			return response.data?.isFollowing ?? false;
+		},
+		enabled: !!followerId && !!followingId && !!token,
+		retry: false,
+	});
+}
+
+// Follow user mutation
+export function useFollowUser() {
+	const queryClient = useQueryClient();
+	const token = getToken();
+
+	return useMutation<boolean, Error, { userId: number }>({
+		mutationFn: async ({ userId }) => {
+			if (!token) {
+				throw new Error("Not authenticated");
+			}
+
+			const response = await graphqlRequest<FollowUserResponse>(
+				FOLLOW_USER_MUTATION,
+				{ userId },
+				token,
+			);
+
+			if (response.errors) {
+				throw new Error(
+					response.errors[0]?.message || "Failed to follow user",
+				);
+			}
+
+			return response.data?.followUser ?? false;
+		},
+		onSuccess: (_, variables) => {
+			// Invalidate relevant queries
+			queryClient.invalidateQueries({ queryKey: queryKeys.profile(variables.userId) });
+			queryClient.invalidateQueries({ queryKey: queryKeys.followers(variables.userId) });
+			queryClient.invalidateQueries({ queryKey: queryKeys.me });
+			// Invalidate isFollowing queries for this user
+			queryClient.invalidateQueries({
+				queryKey: ["isFollowing"],
+			});
+		},
+	});
+}
+
+// Unfollow user mutation
+export function useUnfollowUser() {
+	const queryClient = useQueryClient();
+	const token = getToken();
+
+	return useMutation<boolean, Error, { userId: number }>({
+		mutationFn: async ({ userId }) => {
+			if (!token) {
+				throw new Error("Not authenticated");
+			}
+
+			const response = await graphqlRequest<UnfollowUserResponse>(
+				UNFOLLOW_USER_MUTATION,
+				{ userId },
+				token,
+			);
+
+			if (response.errors) {
+				throw new Error(
+					response.errors[0]?.message || "Failed to unfollow user",
+				);
+			}
+
+			return response.data?.unfollowUser ?? false;
+		},
+		onSuccess: (_, variables) => {
+			// Invalidate relevant queries
+			queryClient.invalidateQueries({ queryKey: queryKeys.profile(variables.userId) });
+			queryClient.invalidateQueries({ queryKey: queryKeys.followers(variables.userId) });
+			queryClient.invalidateQueries({ queryKey: queryKeys.me });
+			// Invalidate isFollowing queries for this user
+			queryClient.invalidateQueries({
+				queryKey: ["isFollowing"],
+			});
 		},
 	});
 }

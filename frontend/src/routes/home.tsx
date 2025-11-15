@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { createRoute, redirect, Link } from "@tanstack/react-router";
+import { createRoute, redirect, Link, useSearch } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +16,11 @@ import { Navbar } from "@/components/Navbar";
 export const HomeRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: "/home",
+	validateSearch: (search: Record<string, unknown>) => {
+		return {
+			feed: search.feed === "true" || search.feed === true,
+		};
+	},
 	component: HomePage,
 	beforeLoad: () => {
 		if (!isAuthenticated()) {
@@ -25,6 +30,8 @@ export const HomeRoute = createRoute({
 });
 
 function HomePage() {
+	const search = useSearch({ from: "/home" });
+	const feed = search.feed || false;
 	const queryClient = useQueryClient();
 	const { data: user, isLoading } = useMe() as { data: MeResponse["me"] | undefined; isLoading: boolean };
 	const {
@@ -33,7 +40,7 @@ function HomePage() {
 		fetchNextPage,
 		hasNextPage,
 		isFetchingNextPage,
-	} = usePosts();
+	} = usePosts(feed);
 	const deletePost = useDeletePost();
 	const toggleLike = useToggleLike();
 	const createComment = useCreateComment();
@@ -410,7 +417,11 @@ function HomePage() {
 					</div>
 				) : (
 					<div className="flex items-center justify-center h-full">
-						<p className="text-muted-foreground">No posts yet. Create one!</p>
+						<p className="text-muted-foreground">
+							{feed
+								? "No posts from people you follow. Start following users to see their posts in your feed!"
+								: "No posts yet. Create one!"}
+						</p>
 					</div>
 				)}
 			</div>

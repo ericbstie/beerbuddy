@@ -7,6 +7,10 @@ type User {
 	nickname: String
 	bio: String
 	profilePicture: String
+	followerCount: Int!
+	followingCount: Int!
+	totalBeersCount: Int!
+	totalPostsCount: Int!
 	createdAt: String!
 	updatedAt: String!
 }

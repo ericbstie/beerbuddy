@@ -7,23 +7,95 @@ function getPicsumImageUrl(seed?: number): string {
 	return `https://picsum.photos/500/700?random=${imageId}`;
 }
 
+// Helper function to add follower/following counts to user object
+async function addUserCounts(user: {
+	id: number;
+	email: string;
+	name: string | null;
+	nickname: string | null;
+	bio: string | null;
+	profilePicture: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+}) {
+	const [followerCount, followingCount, totalPostsCount, totalBeersResult] = await Promise.all([
+		prisma.follow.count({
+			where: { followingId: user.id },
+		}),
+		prisma.follow.count({
+			where: { followerId: user.id },
+		}),
+		prisma.post.count({
+			where: { authorId: user.id },
+		}),
+		prisma.post.aggregate({
+			where: { authorId: user.id },
+			_sum: { beersCount: true },
+		}),
+	]);
+
+	return {
+		...user,
+		followerCount,
+		followingCount,
+		totalPostsCount,
+		totalBeersCount: totalBeersResult._sum.beersCount || 0,
+		createdAt: user.createdAt.toISOString(),
+		updatedAt: user.updatedAt.toISOString(),
+	};
+}
+
 export const postResolvers = {
 	Query: {
 		posts: async (
 			_: unknown,
-			args: { limit?: number; cursor?: number },
+			args: { limit?: number; cursor?: number; feed?: boolean },
 			context: AuthContext,
 		) => {
 			const limit = args.limit || 10;
 			const cursor = args.cursor;
+			const feed = args.feed || false;
 
-			const where = cursor
-				? {
-						id: {
-							lt: cursor,
-						},
-					}
-				: {};
+			// Build where clause
+			const where: {
+				id?: { lt: number };
+				authorId?: { in: number[] };
+			} = {};
+
+			// If feed is true, filter by followed users
+			if (feed) {
+				if (!context.userId) {
+					throw new Error("Not authenticated");
+				}
+
+				// Get list of user IDs that the current user follows
+				const follows = await prisma.follow.findMany({
+					where: {
+						followerId: context.userId,
+					},
+					select: {
+						followingId: true,
+					},
+				});
+
+				const followingIds = follows.map((f) => f.followingId);
+
+				// If user follows no one, return empty result
+				if (followingIds.length === 0) {
+					return {
+						posts: [],
+						hasMore: false,
+						cursor: null,
+					};
+				}
+
+				where.authorId = { in: followingIds };
+			}
+
+			// Add cursor filter if provided
+			if (cursor) {
+				where.id = { lt: cursor };
+			}
 
 			const posts = await prisma.post.findMany({
 				where,
@@ -56,26 +128,28 @@ export const postResolvers = {
 
 			const userId = context.userId;
 
-			return {
-				posts: postsToReturn.map((post) => {
+			const postsWithCounts = await Promise.all(
+				postsToReturn.map(async (post) => {
 					const isLiked = userId
 						? post.likes.some((like) => like.userId === userId)
 						: false;
+
+					const authorWithCounts = await addUserCounts(post.author);
 
 					return {
 						...post,
 						likesCount: post.likes.length,
 						isLiked,
-						author: {
-							...post.author,
-							createdAt: post.author.createdAt.toISOString(),
-							updatedAt: post.author.updatedAt.toISOString(),
-						},
+						author: authorWithCounts,
 						comments: [], // Comments are fetched separately when needed
 						createdAt: post.createdAt.toISOString(),
 						updatedAt: post.updatedAt.toISOString(),
 					};
 				}),
+			);
+
+			return {
+				posts: postsWithCounts,
 				hasMore,
 				cursor: nextCursor,
 			};
@@ -118,18 +192,21 @@ export const postResolvers = {
 				},
 			});
 
+			const commentsWithCounts = await Promise.all(
+				comments.map(async (comment) => {
+					const userWithCounts = await addUserCounts(comment.user);
+					return {
+						...comment,
+						user: userWithCounts,
+						createdAt: comment.createdAt.toISOString(),
+						updatedAt: comment.updatedAt.toISOString(),
+					};
+				}),
+			);
+
 			return {
 				postId,
-				comments: comments.map((comment) => ({
-					...comment,
-					user: {
-						...comment.user,
-						createdAt: comment.user.createdAt.toISOString(),
-						updatedAt: comment.user.updatedAt.toISOString(),
-					},
-					createdAt: comment.createdAt.toISOString(),
-					updatedAt: comment.updatedAt.toISOString(),
-				})),
+				comments: commentsWithCounts,
 			};
 		},
 	},
@@ -193,15 +270,13 @@ export const postResolvers = {
 				},
 			});
 
+			const authorWithCounts = await addUserCounts(post.author);
+
 			return {
 				...post,
 				likesCount: post.likes.length,
 				isLiked: false, // New post, user hasn't liked it yet
-				author: {
-					...post.author,
-					createdAt: post.author.createdAt.toISOString(),
-					updatedAt: post.author.updatedAt.toISOString(),
-				},
+				author: authorWithCounts,
 				comments: [], // Comments are fetched separately when needed
 				createdAt: post.createdAt.toISOString(),
 				updatedAt: post.updatedAt.toISOString(),
@@ -312,15 +387,13 @@ export const postResolvers = {
 				(like) => like.userId === context.userId,
 			);
 
+			const authorWithCounts = await addUserCounts(updatedPost.author);
+
 			return {
 				...updatedPost,
 				likesCount: updatedPost.likes.length,
 				isLiked,
-				author: {
-					...updatedPost.author,
-					createdAt: updatedPost.author.createdAt.toISOString(),
-					updatedAt: updatedPost.author.updatedAt.toISOString(),
-				},
+				author: authorWithCounts,
 				comments: [], // Comments are fetched separately when needed
 				createdAt: updatedPost.createdAt.toISOString(),
 				updatedAt: updatedPost.updatedAt.toISOString(),
@@ -378,13 +451,11 @@ export const postResolvers = {
 				},
 			});
 
+			const userWithCounts = await addUserCounts(comment.user);
+
 			return {
 				...comment,
-				user: {
-					...comment.user,
-					createdAt: comment.user.createdAt.toISOString(),
-					updatedAt: comment.user.updatedAt.toISOString(),
-				},
+				user: userWithCounts,
 				createdAt: comment.createdAt.toISOString(),
 				updatedAt: comment.updatedAt.toISOString(),
 			};

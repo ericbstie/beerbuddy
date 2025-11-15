@@ -26,11 +26,37 @@ export const authResolvers = {
 					updatedAt: true,
 				},
 			});
-			return users.map((user) => ({
-				...user,
-				createdAt: user.createdAt.toISOString(),
-				updatedAt: user.updatedAt.toISOString(),
-			}));
+			
+			const usersWithCounts = await Promise.all(
+				users.map(async (user) => {
+					const [followerCount, followingCount, totalPostsCount, totalBeersResult] = await Promise.all([
+						prisma.follow.count({
+							where: { followingId: user.id },
+						}),
+						prisma.follow.count({
+							where: { followerId: user.id },
+						}),
+						prisma.post.count({
+							where: { authorId: user.id },
+						}),
+						prisma.post.aggregate({
+							where: { authorId: user.id },
+							_sum: { beersCount: true },
+						}),
+					]);
+					return {
+						...user,
+						followerCount,
+						followingCount,
+						totalPostsCount,
+						totalBeersCount: totalBeersResult._sum.beersCount || 0,
+						createdAt: user.createdAt.toISOString(),
+						updatedAt: user.updatedAt.toISOString(),
+					};
+				}),
+			);
+			
+			return usersWithCounts;
 		},
 		user: async (_: unknown, { id }: { id: number }) => {
 			const user = await prisma.user.findUnique({
@@ -49,8 +75,29 @@ export const authResolvers = {
 			if (!user) {
 				return null;
 			}
+
+			const [followerCount, followingCount, totalPostsCount, totalBeersResult] = await Promise.all([
+				prisma.follow.count({
+					where: { followingId: id },
+				}),
+				prisma.follow.count({
+					where: { followerId: id },
+				}),
+				prisma.post.count({
+					where: { authorId: id },
+				}),
+				prisma.post.aggregate({
+					where: { authorId: id },
+					_sum: { beersCount: true },
+				}),
+			]);
+
 			return {
 				...user,
+				followerCount,
+				followingCount,
+				totalPostsCount,
+				totalBeersCount: totalBeersResult._sum.beersCount || 0,
 				createdAt: user.createdAt.toISOString(),
 				updatedAt: user.updatedAt.toISOString(),
 			};
@@ -78,8 +125,28 @@ export const authResolvers = {
 				throw new Error("User not found");
 			}
 
+			const [followerCount, followingCount, totalPostsCount, totalBeersResult] = await Promise.all([
+				prisma.follow.count({
+					where: { followingId: context.userId },
+				}),
+				prisma.follow.count({
+					where: { followerId: context.userId },
+				}),
+				prisma.post.count({
+					where: { authorId: context.userId },
+				}),
+				prisma.post.aggregate({
+					where: { authorId: context.userId },
+					_sum: { beersCount: true },
+				}),
+			]);
+
 			return {
 				...user,
+				followerCount,
+				followingCount,
+				totalPostsCount,
+				totalBeersCount: totalBeersResult._sum.beersCount || 0,
 				createdAt: user.createdAt.toISOString(),
 				updatedAt: user.updatedAt.toISOString(),
 			};
@@ -138,6 +205,10 @@ export const authResolvers = {
 					nickname: user.nickname,
 					bio: user.bio,
 					profilePicture: user.profilePicture,
+					followerCount: 0,
+					followingCount: 0,
+					totalPostsCount: 0,
+					totalBeersCount: 0,
 					createdAt: user.createdAt.toISOString(),
 					updatedAt: user.updatedAt.toISOString(),
 				},
@@ -171,6 +242,22 @@ export const authResolvers = {
 			// Generate token
 			const token = generateToken(user.id);
 
+			const [followerCount, followingCount, totalPostsCount, totalBeersResult] = await Promise.all([
+				prisma.follow.count({
+					where: { followingId: user.id },
+				}),
+				prisma.follow.count({
+					where: { followerId: user.id },
+				}),
+				prisma.post.count({
+					where: { authorId: user.id },
+				}),
+				prisma.post.aggregate({
+					where: { authorId: user.id },
+					_sum: { beersCount: true },
+				}),
+			]);
+
 			return {
 				token,
 				user: {
@@ -180,6 +267,10 @@ export const authResolvers = {
 					nickname: user.nickname,
 					bio: user.bio,
 					profilePicture: user.profilePicture,
+					followerCount,
+					followingCount,
+					totalPostsCount,
+					totalBeersCount: totalBeersResult._sum.beersCount || 0,
 					createdAt: user.createdAt.toISOString(),
 					updatedAt: user.updatedAt.toISOString(),
 				},
@@ -243,8 +334,28 @@ export const authResolvers = {
 				},
 			});
 
+			const [followerCount, followingCount, totalPostsCount, totalBeersResult] = await Promise.all([
+				prisma.follow.count({
+					where: { followingId: context.userId },
+				}),
+				prisma.follow.count({
+					where: { followerId: context.userId },
+				}),
+				prisma.post.count({
+					where: { authorId: context.userId },
+				}),
+				prisma.post.aggregate({
+					where: { authorId: context.userId },
+					_sum: { beersCount: true },
+				}),
+			]);
+
 			return {
 				...updatedUser,
+				followerCount,
+				followingCount,
+				totalPostsCount,
+				totalBeersCount: totalBeersResult._sum.beersCount || 0,
 				createdAt: updatedUser.createdAt.toISOString(),
 				updatedAt: updatedUser.updatedAt.toISOString(),
 			};
