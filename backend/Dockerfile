@@ -11,7 +11,7 @@ RUN bun install
 
 # Copy Prisma files and generate client (no DB connection needed)
 COPY prisma ./prisma
-RUN DATABASE_URL="postgresql://dummy:dummy@dummy:5432/dummy" bunx prisma generate
+RUN DATABASE_URL="postgresql://dummy:dummy@dummy:5432/dummy" bunx prisma generate --no-hints
 
 # Copy application code
 COPY . .

@@ -2,31 +2,28 @@ import { serve } from "bun";
 import index from "./index.html";
 
 const server = serve({
-	routes: {
-		// Serve index.html for all unmatched routes.
-		"/*": index,
+	async fetch(req) {
+		const url = new URL(req.url);
 
-		"/api/hello": {
-			async GET(req) {
+		// Handle API routes
+		if (url.pathname === "/api/hello") {
+			if (req.method === "GET" || req.method === "PUT") {
 				return Response.json({
 					message: "Hello, world!",
-					method: "GET",
+					method: req.method,
 				});
-			},
-			async PUT(req) {
-				return Response.json({
-					message: "Hello, world!",
-					method: "PUT",
-				});
-			},
-		},
+			}
+		}
 
-		"/api/hello/:name": async (req) => {
-			const name = req.params.name;
+		if (url.pathname.startsWith("/api/hello/")) {
+			const name = url.pathname.split("/api/hello/")[1];
 			return Response.json({
 				message: `Hello, ${name}!`,
 			});
-		},
+		}
+
+		// Serve index.html for all other routes (SPA routing)
+		return index;
 	},
 
 	development: process.env.NODE_ENV !== "production" && {

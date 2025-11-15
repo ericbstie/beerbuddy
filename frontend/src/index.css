@@ -46,6 +46,7 @@ body::before {
 	*,
 	::before,
 	::after {
+		/* biome-ignore lint/complexity/noImportantStyles: Required for accessibility - must override all animations */
 		animation: none !important;
 	}
 }

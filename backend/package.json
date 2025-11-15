@@ -21,6 +21,8 @@
 	},
 	"scripts": {
 		"dev": "bun run index.ts",
+		"test": "bun test",
+		"test:integration": "API_URL=${API_URL:-http://localhost:8000/graphql} bun test tests/integration",
 		"lint": "bunx @biomejs/biome check .",
 		"lint:fix": "bunx @biomejs/biome check --write .",
 		"format": "bunx @biomejs/biome format --write ."

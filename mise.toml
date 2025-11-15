@@ -1,2 +1,12 @@
 [tools]
 bun = "latest"
+
+[tasks.setup]
+description = "Set up the development environment (install dependencies, generate Prisma client) - does not start servers"
+dir = "{{config_dir}}"
+run = [
+  "mise install",
+  "cd backend && bun install",
+  "cd backend && bunx prisma generate",
+  "cd frontend && bun install"
+]
