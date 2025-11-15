@@ -1,11 +1,14 @@
 # Auth mutations
-mutation Signup($email: String!, $password: String!, $name: String) {
-	signup(email: $email, password: $password, name: $name) {
+mutation Signup($email: String!, $password: String!, $name: String, $nickname: String) {
+	signup(email: $email, password: $password, name: $name, nickname: $nickname) {
 		token
 		user {
 			id
 			email
 			name
+			nickname
+			bio
+			profilePicture
 		}
 	}
 }
@@ -17,6 +20,9 @@ mutation Login($email: String!, $password: String!) {
 			id
 			email
 			name
+			nickname
+			bio
+			profilePicture
 		}
 	}
 }
@@ -26,6 +32,151 @@ query Me {
 		id
 		email
 		name
+		nickname
+		bio
+		profilePicture
 		createdAt
+		updatedAt
 	}
+}
+
+query Profile($id: Int!) {
+	user(id: $id) {
+		id
+		email
+		name
+		nickname
+		bio
+		profilePicture
+		createdAt
+		updatedAt
+	}
+}
+
+mutation UpdateProfile($nickname: String, $bio: String, $profilePicture: String) {
+	updateProfile(nickname: $nickname, bio: $bio, profilePicture: $profilePicture) {
+		id
+		email
+		name
+		nickname
+		bio
+		profilePicture
+		createdAt
+		updatedAt
+	}
+}
+
+query Posts($limit: Int, $cursor: Int) {
+	posts(limit: $limit, cursor: $cursor) {
+		posts {
+			id
+			title
+			description
+			beersCount
+			imageUrl
+			authorId
+			likesCount
+			isLiked
+			author {
+				id
+				email
+				name
+				nickname
+				bio
+				profilePicture
+				createdAt
+				updatedAt
+			}
+			createdAt
+			updatedAt
+		}
+		hasMore
+		cursor
+	}
+}
+
+query PostComments($postId: Int!) {
+	postComments(postId: $postId) {
+		postId
+		comments {
+			id
+			text
+			userId
+			postId
+			user {
+				id
+				email
+				name
+				nickname
+				bio
+				profilePicture
+				createdAt
+				updatedAt
+			}
+			createdAt
+			updatedAt
+		}
+	}
+}
+
+mutation CreatePost($title: String!, $description: String, $beersCount: Int!, $imageUrl: String) {
+	createPost(title: $title, description: $description, beersCount: $beersCount, imageUrl: $imageUrl) {
+		id
+		title
+		description
+		beersCount
+		imageUrl
+		authorId
+		likesCount
+		isLiked
+		author {
+			id
+			email
+			name
+			nickname
+			bio
+			profilePicture
+			createdAt
+			updatedAt
+		}
+		createdAt
+		updatedAt
+	}
+}
+
+mutation DeletePost($id: Int!) {
+	deletePost(id: $id)
+}
+
+mutation ToggleLike($postId: Int!) {
+	toggleLike(postId: $postId) {
+		id
+		likesCount
+		isLiked
+	}
+}
+
+mutation CreateComment($postId: Int!, $text: String!) {
+	createComment(postId: $postId, text: $text) {
+		id
+		text
+		userId
+		postId
+		user {
+			id
+			email
+			name
+			nickname
+			bio
+			profilePicture
+			createdAt
+			updatedAt
+		}
+		createdAt
+		updatedAt
+	}
+}
+
+mutation DeleteComment($id: Int!) {
+	deleteComment(id: $id)
 }

@@ -7,21 +7,31 @@ import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { extractTokenFromHeader, verifyToken } from "./src/auth/jwt";
 import { type AuthContext, authResolvers } from "./src/auth/resolvers";
+import { postResolvers } from "./src/posts/resolvers";
 
 const fastify = Fastify({
 	logger: true,
 });
 
-// Load GraphQL schema from file
+// Load GraphQL schemas from files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const schemaPath = join(__dirname, "src/auth/schema.graphql");
-const typeDefs = readFileSync(schemaPath, "utf-8");
+const authSchemaPath = join(__dirname, "src/auth/schema.graphql");
+const postsSchemaPath = join(__dirname, "src/posts/schema.graphql");
+const authTypeDefs = readFileSync(authSchemaPath, "utf-8");
+const postsTypeDefs = readFileSync(postsSchemaPath, "utf-8");
+const typeDefs = [authTypeDefs, postsTypeDefs];
 
-// Use resolvers from auth slice
+// Combine resolvers from all slices
 const resolvers = {
-	Query: authResolvers.Query,
-	Mutation: authResolvers.Mutation,
+	Query: {
+		...authResolvers.Query,
+		...postResolvers.Query,
+	},
+	Mutation: {
+		...authResolvers.Mutation,
+		...postResolvers.Mutation,
+	},
 };
 
 const apolloServer = new ApolloServer<AuthContext>({
@@ -44,8 +54,14 @@ const start = async () => {
 	try {
 		// Register CORS plugin
 		await fastify.register(cors, {
-			origin: true, // Allow all origins in development
+			origin: [
+				"http://localhost:3000",
+				"http://127.0.0.1:3000",
+				/^http:\/\/localhost:\d+$/,
+			],
 			credentials: true,
+			methods: ["GET", "POST", "OPTIONS"],
+			allowedHeaders: ["Content-Type", "Authorization"],
 		});
 
 		await apolloServer.start();
@@ -53,9 +69,10 @@ const start = async () => {
 			context: createContext,
 		});
 
-		await fastify.listen({ port: 3000, host: "0.0.0.0" });
-		console.log("Server running at http://localhost:3000");
-		console.log("GraphQL endpoint: http://localhost:3000/graphql");
+		const port = Number(process.env.PORT) || 8000;
+		await fastify.listen({ port, host: "0.0.0.0" });
+		console.log(`Server running at http://localhost:${port}`);
+		console.log(`GraphQL endpoint: http://localhost:${port}/graphql`);
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

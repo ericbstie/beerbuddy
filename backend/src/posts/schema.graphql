@@ -1,0 +1,49 @@
+type Comment {
+	id: Int!
+	text: String!
+	userId: Int!
+	user: User!
+	postId: Int!
+	createdAt: String!
+	updatedAt: String!
+}
+
+type Post {
+	id: Int!
+	title: String!
+	description: String
+	beersCount: Int!
+	imageUrl: String!
+	authorId: Int!
+	author: User!
+	likesCount: Int!
+	isLiked: Boolean!
+	comments: [Comment!]!
+	createdAt: String!
+	updatedAt: String!
+}
+
+type PostComments {
+	postId: Int!
+	comments: [Comment!]!
+}
+
+type PostsConnection {
+	posts: [Post!]!
+	hasMore: Boolean!
+	cursor: Int
+}
+
+extend type Query {
+	posts(limit: Int, cursor: Int): PostsConnection!
+	postComments(postId: Int!): PostComments!
+}
+
+extend type Mutation {
+	createPost(title: String!, description: String, beersCount: Int!, imageUrl: String): Post!
+	deletePost(id: Int!): Boolean!
+	toggleLike(postId: Int!): Post!
+	createComment(postId: Int!, text: String!): Comment!
+	deleteComment(id: Int!): Boolean!
+}
+

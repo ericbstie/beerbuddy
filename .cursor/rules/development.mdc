@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+
+- Always run docker compose down -v && docker compose up -d to restart/start the project
+- Never start postgres or other services directly.

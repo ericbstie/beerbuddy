@@ -4,6 +4,9 @@ type User {
 	id: Int!
 	email: String!
 	name: String
+	nickname: String
+	bio: String
+	profilePicture: String
 	createdAt: String!
 	updatedAt: String!
 }
@@ -20,6 +23,7 @@ type Query {
 }
 
 type Mutation {
-	signup(email: String!, password: String!, name: String): AuthPayload!
+	signup(email: String!, password: String!, name: String, nickname: String): AuthPayload!
 	login(email: String!, password: String!): AuthPayload!
+	updateProfile(nickname: String, bio: String, profilePicture: String): User!
 }

@@ -22,6 +22,9 @@ services:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
       BUN_PUBLIC_API_URL: ${BUN_PUBLIC_API_URL:-http://localhost:${BACKEND_PORT:-8000}/graphql}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
   fastify:
     build:
@@ -29,6 +32,7 @@ services:
     ports:
       - "${BACKEND_PORT:-8000}:3000"
     environment:
+      PORT: 3000
       DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-beerbuddy}:${POSTGRES_PASSWORD:-beerbuddy}@postgres:5432/${POSTGRES_DB:-beerbuddy}}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production-use-strong-random-secret}
     depends_on:

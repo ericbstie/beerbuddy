@@ -30,5 +30,8 @@
 		"lint": "bunx @biomejs/biome check .",
 		"lint:fix": "bunx @biomejs/biome check --write .",
 		"format": "bunx @biomejs/biome format --write ."
+	},
+	"prisma": {
+		"seed": "bun run prisma/seed.ts"
 	}
 }

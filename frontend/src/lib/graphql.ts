@@ -51,13 +51,16 @@ export async function graphqlRequest<T>(
 
 // Auth mutations
 export const SIGNUP_MUTATION = `
-	mutation Signup($email: String!, $password: String!, $name: String) {
-		signup(email: $email, password: $password, name: $name) {
+	mutation Signup($email: String!, $password: String!, $name: String, $nickname: String) {
+		signup(email: $email, password: $password, name: $name, nickname: $nickname) {
 			token
 			user {
 				id
 				email
 				name
+				nickname
+				bio
+				profilePicture
 			}
 		}
 	}
@@ -71,6 +74,9 @@ export const LOGIN_MUTATION = `
 				id
 				email
 				name
+				nickname
+				bio
+				profilePicture
 			}
 		}
 	}
@@ -82,18 +88,59 @@ export const ME_QUERY = `
 			id
 			email
 			name
+			nickname
+			bio
+			profilePicture
 			createdAt
+			updatedAt
 		}
 	}
 `;
 
+export const PROFILE_QUERY = `
+	query Profile($id: Int!) {
+		user(id: $id) {
+			id
+			email
+			name
+			nickname
+			bio
+			profilePicture
+			createdAt
+			updatedAt
+		}
+	}
+`;
+
+export const UPDATE_PROFILE_MUTATION = `
+	mutation UpdateProfile($nickname: String, $bio: String, $profilePicture: String) {
+		updateProfile(nickname: $nickname, bio: $bio, profilePicture: $profilePicture) {
+			id
+			email
+			name
+			nickname
+			bio
+			profilePicture
+			createdAt
+			updatedAt
+		}
+	}
+`;
+
+interface User {
+	id: number;
+	email: string;
+	name: string | null;
+	nickname: string | null;
+	bio: string | null;
+	profilePicture: string | null;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
 interface AuthPayload {
 	token: string;
-	user: {
-		id: number;
-		email: string;
-		name: string | null;
-	};
+	user: User;
 }
 
 export interface SignupResponse {
@@ -105,10 +152,221 @@ export interface LoginResponse {
 }
 
 export interface MeResponse {
-	me: {
-		id: number;
-		email: string;
-		name: string | null;
+	me: User & {
 		createdAt: string;
+		updatedAt: string;
 	};
+}
+
+export interface ProfileResponse {
+	user: User & {
+		createdAt: string;
+		updatedAt: string;
+	} | null;
+}
+
+export interface UpdateProfileResponse {
+	updateProfile: User & {
+		createdAt: string;
+		updatedAt: string;
+	};
+}
+
+export const POSTS_QUERY = `
+	query Posts($limit: Int, $cursor: Int) {
+		posts(limit: $limit, cursor: $cursor) {
+			posts {
+				id
+				title
+				description
+				beersCount
+				imageUrl
+				authorId
+				likesCount
+				isLiked
+				author {
+					id
+					email
+					name
+					nickname
+					bio
+					profilePicture
+					createdAt
+					updatedAt
+				}
+				createdAt
+				updatedAt
+			}
+			hasMore
+			cursor
+		}
+	}
+`;
+
+export const POST_COMMENTS_QUERY = `
+	query PostComments($postId: Int!) {
+		postComments(postId: $postId) {
+			postId
+			comments {
+				id
+				text
+				userId
+				postId
+				user {
+					id
+					email
+					name
+					nickname
+					bio
+					profilePicture
+					createdAt
+					updatedAt
+				}
+				createdAt
+				updatedAt
+			}
+		}
+	}
+`;
+
+export interface Comment {
+	id: number;
+	text: string;
+	userId: number;
+	postId: number;
+	user: User & {
+		createdAt: string;
+		updatedAt: string;
+	};
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface Post {
+	id: number;
+	title: string;
+	description: string | null;
+	beersCount: number;
+	imageUrl: string;
+	authorId: number;
+	likesCount: number;
+	isLiked: boolean;
+	comments: Comment[];
+	author: User & {
+		createdAt: string;
+		updatedAt: string;
+	};
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface PostsConnection {
+	posts: Post[];
+	hasMore: boolean;
+	cursor: number | null;
+}
+
+export interface PostsResponse {
+	posts: PostsConnection;
+}
+
+export interface PostCommentsResponse {
+	postComments: {
+		postId: number;
+		comments: Comment[];
+	};
+}
+
+export const CREATE_POST_MUTATION = `
+	mutation CreatePost($title: String!, $description: String, $beersCount: Int!, $imageUrl: String) {
+		createPost(title: $title, description: $description, beersCount: $beersCount, imageUrl: $imageUrl) {
+			id
+			title
+			description
+			beersCount
+			imageUrl
+			authorId
+			author {
+				id
+				email
+				name
+				nickname
+				bio
+				profilePicture
+				createdAt
+				updatedAt
+			}
+			createdAt
+			updatedAt
+		}
+	}
+`;
+
+export const DELETE_POST_MUTATION = `
+	mutation DeletePost($id: Int!) {
+		deletePost(id: $id)
+	}
+`;
+
+export const TOGGLE_LIKE_MUTATION = `
+	mutation ToggleLike($postId: Int!) {
+		toggleLike(postId: $postId) {
+			id
+			likesCount
+			isLiked
+		}
+	}
+`;
+
+export const CREATE_COMMENT_MUTATION = `
+	mutation CreateComment($postId: Int!, $text: String!) {
+		createComment(postId: $postId, text: $text) {
+			id
+			text
+			userId
+			postId
+			user {
+				id
+				email
+				name
+				nickname
+				bio
+				profilePicture
+				createdAt
+				updatedAt
+			}
+			createdAt
+			updatedAt
+		}
+	}
+`;
+
+export const DELETE_COMMENT_MUTATION = `
+	mutation DeleteComment($id: Int!) {
+		deleteComment(id: $id)
+	}
+`;
+
+export interface CreatePostResponse {
+	createPost: Post;
+}
+
+export interface DeletePostResponse {
+	deletePost: boolean;
+}
+
+export interface ToggleLikeResponse {
+	toggleLike: {
+		id: number;
+		likesCount: number;
+		isLiked: boolean;
+	};
+}
+
+export interface CreateCommentResponse {
+	createComment: Comment;
+}
+
+export interface DeleteCommentResponse {
+	deleteComment: boolean;
 }
