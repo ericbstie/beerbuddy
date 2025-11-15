@@ -15,3 +15,10 @@ run = [
 description = "Seed the database with test data"
 dir = "backend"
 run = "DATABASE_URL=postgresql://beerbuddy:beerbuddy@localhost:5432/beerbuddy bun run prisma db seed"
+
+[tasks.start]
+description = "Start Docker containers (rebuilds and removes volumes)"
+run = [
+  "docker compose down -v",
+  "docker compose up --build -d"
+]
